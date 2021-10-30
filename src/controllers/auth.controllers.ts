@@ -1,11 +1,14 @@
 import type {Request, ResponseToolkit, Server} from "@hapi/hapi";
+import Boom from "@hapi/boom";
 import type {Res} from "./common";
 
 import Joi from "joi";
 
 import {Database} from "../db";
 import {AuthService} from "../services";
-import {encodeAccessToken, encodeRefreshToken, generateClaims} from "../utils/token";
+import {decodeRefreshToken, encodeAccessToken, encodeRefreshToken, generateClaims} from "../utils";
+import { getLogger } from "./common";
+import {Account, AccountToken} from "../models";
 
 const loginSchema = Joi.object().keys({
   email: Joi.string().email().min(3).max(256).required(),
@@ -22,11 +25,11 @@ const registerSchema = Joi.object().keys({
  */
 type LoginRequest = {
   /**
-   *
+   * Email address to sign in with
    */
   email: string;
   /**
-   *
+   * Password to sign in with
    */
   password: string
 };
@@ -36,11 +39,11 @@ type LoginRequest = {
  */
 type LoginResponse = {
   /**
-   *
+   * Refresh token to generate further access tokens
    */
   refresh_token: string;
   /**
-   *
+   * Access token to authenticate requests with
    */
   access_token: string;
 };
@@ -50,15 +53,15 @@ type LoginResponse = {
  */
 type RegisterRequest = {
   /**
-   *
+   * Email address to register with
    */
   email: string;
   /**
-   *
+   * Password to register with
    */
   password: string;
   /**
-   *
+   * Display name to register with
    */
   name: string
 }
@@ -68,15 +71,38 @@ type RegisterRequest = {
  */
 type RegisterResponse = {
   /**
-   *
+   * Refresh token to generate further access tokens
    */
   refresh_token: string;
   /**
-   *
+   * Access token to authenticate requests with
    */
   access_token: string;
 };
 
+/**
+ * Parameter body for `refresh`
+ */
+type RefreshRequest = {
+  /**
+   * Refresh token to generate a new access token for
+   */
+  token: string;
+}
+
+/**
+ * Result from `refresh`
+ */
+type RefreshResponse = {
+  /**
+   * Access token to authenticate requests with
+   */
+  access_token: string;
+}
+
+/**
+ * Authentication controller implementing routes
+ */
 export class AuthController {
   public constructor(private readonly db: Database, private readonly authService: AuthService) {
     this.login = this.login.bind(this);
@@ -119,21 +145,40 @@ export class AuthController {
    * @return {Res<LoginResponse>} response payload
    */
   private async login(req: Request, h: ResponseToolkit): Promise<Res<LoginResponse>> {
-    const { email, password } = req.payload as LoginRequest;
+    const logger = getLogger(req);
+    const {email, password} = req.payload as LoginRequest;
 
     const tx = await this.db.tx()
 
-    const account = await this.authService.fetchAccountByLogin({ email, password}, {
-      tx
-    });
-    if (!account) {
-      await tx.rollback()
-      return h.response().code(401);
+    let account: Account | undefined;
+    try {
+      account = await this.authService.fetchAccountByLogin({
+        email,
+        password
+      }, {
+        tx
+      });
+    } catch (err) {
+      await tx.rollback();
+      logger.error(`Failed to fetch account: ${err}`, err)
+      return Boom.internal();
     }
 
-    const token = await this.authService.createAccountToken(account.id, {
-      tx
-    });
+    if (!account) {
+      await tx.rollback()
+      return Boom.unauthorized();
+    }
+
+    let token: AccountToken;
+    try {
+      token = await this.authService.createAccountToken(account.id, {
+        tx
+      });
+    } catch (err) {
+      await tx.rollback();
+      logger.error(`Failed to create account token: ${err}`, err)
+      return Boom.internal();
+    }
 
     await tx.commit();
 
@@ -151,19 +196,41 @@ export class AuthController {
    * @return {Res<LoginResponse>} response payload
    */
   private async register(req: Request, h: ResponseToolkit): Promise<Res<RegisterResponse>> {
+    const logger = getLogger(req);
     const { email, password, name } = req.payload as RegisterRequest;
 
     const tx = await this.db.tx();
 
-    const account = await this.authService.createAccount({
-      email,
-      password,
-      name
-    });
+    let account: Account | undefined;
+    try {
+      account = await this.authService.createAccount({
+        email,
+        password,
+        name
+      }, {
+        tx
+      });
+    } catch (err) {
+      await tx.rollback();
+      logger.error(`Failed to create account: ${err}`, err)
+      return Boom.internal();
+    }
+    if (!account) {
+      // If createAccount returns undefined it'll mean we've found a duplicate account
+      // Return unauthorized
+      return Boom.unauthorized();
+    }
 
-    const token = await this.authService.createAccountToken(account.id, {
-      tx
-    });
+    let token: AccountToken;
+    try {
+      token = await this.authService.createAccountToken(account.id, {
+        tx
+      });
+    } catch (err) {
+      await tx.rollback();
+      logger.error(`Failed to create token: ${err}`, err);
+      return Boom.internal();
+    }
 
     await tx.commit();
 
@@ -171,5 +238,53 @@ export class AuthController {
       refresh_token: await encodeRefreshToken(token),
       access_token: await encodeAccessToken(generateClaims(account, token))
     };
+  }
+
+  /**
+   * @private
+   * Refresh generates a new access token using the provided refresh token
+   * @param req {Request} hapi request object
+   * @param h {ResponseToolkit} hapi response toolkit
+   * @return {Res<RefreshResponse>} response payload
+   */
+  private async refresh(req: Request, h: ResponseToolkit): Promise<Res<RefreshResponse>> {
+    const logger = getLogger(req);
+    const { token } = req.payload as RefreshRequest;
+
+    const decoded = await decodeRefreshToken(token);
+
+    const tx = await this.db.tx();
+    let accountToken: AccountToken | undefined;
+    try {
+      accountToken = await this.authService.fetchAccountToken(decoded.id, { tx });
+    } catch (err) {
+      await tx.rollback();
+      logger.error(`Failed to fetch token: ${err}`, err);
+      return Boom.internal();
+    }
+
+    if (!accountToken) {
+      // if fetchAccountToken has returned undefined, the token isn't valid
+      return Boom.unauthorized();
+    }
+
+    let account: Account | undefined;
+    try {
+      account = await this.authService.fetchAccount(accountToken.account_id, {tx});
+    } catch (err) {
+      await tx.rollback();
+      logger.error(`Failed to fetch account: ${err}`, err);
+      return Boom.internal();
+    }
+
+    if (!account) {
+      return Boom.unauthorized();
+    }
+
+    await tx.rollback();
+
+    return {
+      access_token: await encodeAccessToken(generateClaims(account, accountToken)),
+    }
   }
 }

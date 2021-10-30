@@ -15,7 +15,7 @@ module.exports = {
   },
   jwt: {
     signingKey: 'defaultsigningkeydefaultsigningkey',
-    signingAlgorithm: 'RS512',
+    signingAlgorithm: 'HS512',
     expiration: '1h',
     audience: 'metrics-backend',
     subject: 'metrics-backend',
