@@ -1,0 +1,41 @@
+{
+  "name": "metrics-backend",
+  "scripts": {
+    "start": "NODE_ENV=production node ./dist/index.js",
+    "start:dev": "NODE_ENV=development node ./dist/index.js",
+    "dev": "npm run compile && npm run start:dev",
+    "watch": "./node_modules/nodemon/bin/nodemon.js --watch src -e ts --exec \"npm run dev\"",
+    "compile": "./node_modules/typescript/bin/tsc"
+  },
+  "version": "0.0.1",
+  "dependencies": {
+    "@hapi/boom": "^9.1.4",
+    "@hapi/glue": "^8.0.0",
+    "@hapi/hapi": "^20.2.1",
+    "bcrypt": "^5.0.1",
+    "config": "^3.3.6",
+    "hapi-pino": "^8.5.0",
+    "joi": "^17.4.2",
+    "jsonwebtoken": "^8.5.1",
+    "pg": "^8.7.1",
+    "pino": "^7.0.5",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.15.8",
+    "@babel/preset-env": "^7.15.8",
+    "@babel/preset-typescript": "^7.15.0",
+    "@types/bcrypt": "^5.0.0",
+    "@types/config": "^0.0.39",
+    "@types/hapi__glue": "^6.1.4",
+    "@types/jest": "^27.0.2",
+    "@types/jsonwebtoken": "^8.5.5",
+    "@types/node": "^16.11.4",
+    "@types/pg": "^8.6.1",
+    "@types/uuid": "^8.3.1",
+    "babel-jest": "^27.3.1",
+    "jest": "^27.3.1",
+    "nodemon": "^2.0.14",
+    "typescript": "^4.4.4"
+  }
+}

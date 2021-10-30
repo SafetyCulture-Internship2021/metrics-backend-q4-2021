@@ -1,0 +1,24 @@
+version: '3.2'
+services:
+  postgres:
+    image: postgres:12
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=metrics-backend
+      - PGDATA=/var/lib/postgresql/data
+      - POSTGRES_USER=metrics-backend
+      - POSTGRES_PASSWORD=metrics-backend
+    volumes:
+      - db_data:/var/lib/postgresql/data
+  postgres-migrations:
+    build: ./migrations
+    environment:
+      - PG_DB_HOST=host.docker.internal
+      - PG_DB_NAME=metrics-backend
+      - PG_DB_USER=metrics-backend
+      - PG_DB_PASSWORD=metrics-backend
+      - PG_DB_PORT=5432
+    restart: on-failure:10
+volumes:
+  db_data:
