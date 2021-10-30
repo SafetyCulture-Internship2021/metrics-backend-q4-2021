@@ -1,4 +1,4 @@
-import type {Request, ResponseToolkit, Server} from "@hapi/hapi";
+import type {Request, ResponseToolkit, Server, ServerAuthScheme} from "@hapi/hapi";
 import Boom from "@hapi/boom";
 import type {Res} from "./common";
 
@@ -6,18 +6,24 @@ import Joi from "joi";
 
 import {Database} from "../db";
 import {AuthService} from "../services";
-import {decodeRefreshToken, encodeAccessToken, encodeRefreshToken, generateClaims} from "../utils";
+import {decodeAccessToken, decodeRefreshToken, encodeAccessToken, encodeRefreshToken, generateClaims} from "../utils";
 import { getLogger } from "./common";
 import {Account, AccountToken} from "../models";
+import {Controller} from "./controller";
+
+const SCHEME_NAME = 'jwt';
 
 const loginSchema = Joi.object().keys({
   email: Joi.string().email().min(3).max(256).required(),
-  password: Joi.string().min(8).max(128).required()
+  password: Joi.string().min(8).max(128).required(),
 });
 const registerSchema = Joi.object().keys({
   name: Joi.string().min(1).max(64).required(),
   email: Joi.string().email().min(3).max(256).required(),
   password: Joi.string().min(8).max(128).required(),
+});
+const refreshSchema = Joi.object().keys({
+  token: Joi.string().required(),
 });
 
 /**
@@ -103,22 +109,41 @@ type RefreshResponse = {
 /**
  * Authentication controller implementing routes
  */
-export class AuthController {
+export class AuthController extends Controller {
   public constructor(private readonly db: Database, private readonly authService: AuthService) {
+    super();
     this.login = this.login.bind(this);
     this.register = this.register.bind(this);
+    this.refresh = this.refresh.bind(this);
   }
 
   /**
    * register the routes from this controller with hapi
    * @param svc {Server} hapi service reference
    */
-  public registerRoutes(svc: Server) {
+  public registerController(svc: Server) {
+    svc.auth.scheme(SCHEME_NAME, () => {
+      return {
+        authenticate: async (req: Request, h: ResponseToolkit): Promise<Res<unknown>> => {
+          const {authorization} = req.headers;
+          if (!authorization) {
+            return Boom.unauthorized(null, SCHEME_NAME);
+          }
+          const claims = await decodeAccessToken(authorization);
+
+          return h.authenticated({ credentials: claims });
+        }
+      }
+    });
+    svc.auth.strategy(SCHEME_NAME, SCHEME_NAME);
+    svc.auth.default(SCHEME_NAME);
+
     svc.route({
       method: "POST",
       path: "/login",
       handler: this.login,
       options: {
+        auth: false,
         validate: {
           payload: loginSchema
         }
@@ -130,11 +155,24 @@ export class AuthController {
       path: "/register",
       handler: this.register,
       options: {
+        auth: false,
         validate: {
           payload: registerSchema
         }
       }
     });
+
+    svc.route({
+      method: "POST",
+      path: "/refresh",
+      handler: this.refresh,
+      options: {
+        auth: false,
+        validate: {
+          payload: refreshSchema
+        }
+      }
+    })
   }
 
   /**

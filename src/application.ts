@@ -6,6 +6,7 @@ import {compose} from "@hapi/glue";
 import {Database, initPool} from "./db";
 import {AuthService} from "./services";
 import {AuthController} from "./controllers";
+import {Controller} from "./controllers/controller";
 
 /**
  * Application initialises the API service and all of its dependencies
@@ -13,7 +14,7 @@ import {AuthController} from "./controllers";
 export class Application {
   private svc?: Server;
 
-  private readonly authController: AuthController;
+  private readonly controllers: Controller[] = [];
 
   constructor() {
     // MARK: initialise all dependencies for the application here
@@ -24,7 +25,7 @@ export class Application {
     const authService = new AuthService(database);
 
     // Controller initialisation
-    this.authController = new AuthController(database, authService);
+    this.controllers.push(new AuthController(database, authService));
   }
 
   /**
@@ -59,7 +60,9 @@ export class Application {
         relativeTo: __dirname
       });
 
-      this.authController.registerRoutes(this.svc);
+      for (const controller of this.controllers) {
+        controller.registerController(this.svc);
+      }
 
       await this.svc.start();
     } catch (err) {

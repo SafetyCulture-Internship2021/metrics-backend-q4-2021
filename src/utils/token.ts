@@ -115,5 +115,5 @@ export function decodeAccessToken(token: string): Promise<Claims> {
  * @return {Promise<AccountToken>} account token extracted from the token
  */
 export async function decodeRefreshToken(token: string): Promise<AccountToken> {
-  return JSON.parse((Buffer.from(token).toString("utf-8"))) as AccountToken;
+  return JSON.parse((Buffer.from(token, "base64").toString("utf-8"))) as AccountToken;
 }

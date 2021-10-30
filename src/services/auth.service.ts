@@ -109,8 +109,6 @@ export class AuthService {
     if (rows.length === 0) {
       return;
     }
-    console.log(password);
-    console.log(rows[0].hash);
 
     const isValid = verifyPassword(password, rows[0].hash);
     if (!isValid) {

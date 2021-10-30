@@ -17,6 +17,7 @@ export type Res<TBody> = TBody | ResponseObject | Boom;
  */
 export function getLogger(req: Request): Logger {
   // This is monkey-patched by the 'hapi-pino' library
+  // We are making the assumption the logger will always be set
   // @ts-ignore
   return req.logger as Logger
 }
