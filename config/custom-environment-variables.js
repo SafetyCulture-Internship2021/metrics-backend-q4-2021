@@ -15,7 +15,6 @@ module.exports = {
   },
   jwt: {
     signingKey: 'JWT_SIGNING_KEY',
-    signingAlgorithm: 'JWT_ALGORITHM',
     expiration: 'JWT_EXPIRATION',
     audience: 'JWT_AUDIENCE',
     subject: 'JWT_SUBJECT',

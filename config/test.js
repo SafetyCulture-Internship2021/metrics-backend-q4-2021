@@ -1,6 +1,6 @@
 module.exports = {
   server: {
-    port: 3500
+    port: 6000
   },
   db: {
     host: 'localhost',
@@ -14,10 +14,10 @@ module.exports = {
     }
   },
   jwt: {
-    signingKey: 'defaultsigningkeydefaultsigningkey',
-    expiration: '1h',
-    audience: 'metrics-backend',
-    subject: 'metrics-backend',
-    issuer: 'metrics-backend'
+    signingKey: 'testsigningkeytestsigningkeytestsigningkey',
+    expiration: '5m',
+    audience: 'test',
+    subject: 'test',
+    issuer: 'test'
   }
 };

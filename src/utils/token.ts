@@ -51,11 +51,11 @@ export function generateClaims(account: Account, token: AccountToken): Claims {
  * @param claims {Claims} claim set to generate the token with
  * @return {Promise<string>} encoded JWT from the claims
  */
-export function encodeAccessToken(claims: Claims): Promise<string> {
-  return new Promise<string>((resolve, reject) => {
+export async function encodeAccessToken(claims: Claims): Promise<string> {
+  return await new Promise<string>((resolve, reject) => {
     try {
       const tok = jwt.sign(claims, config.get('jwt.signingKey'), {
-        algorithm: config.get('jwt.signingAlgorithm'),
+        algorithm: 'HS512',
         expiresIn: config.get('jwt.expiration'),
         audience: config.get('jwt.audience'),
         subject: config.get('jwt.subject'),
@@ -82,8 +82,8 @@ export async function encodeRefreshToken(token: AccountToken): Promise<string> {
  * @param token {string} The raw JWT to verify
  * @return {Promise<Claims>} claim set that was extracted from the token
  */
-export function decodeAccessToken(token: string): Promise<Claims> {
-  return new Promise((resolve, reject) => {
+export async function decodeAccessToken(token: string): Promise<Claims> {
+  return await new Promise((resolve, reject) => {
     try {
       const result = jwt.verify(token, config.get('jwt.signingKey'), {
         audience: config.get('jwt.audience'),
@@ -92,17 +92,14 @@ export function decodeAccessToken(token: string): Promise<Claims> {
       });
 
       const {value, error, warning} = claimsSchema.validate(result, {
-
+        stripUnknown: true
       });
 
       if (error) {
         return reject(error);
       }
-      if (warning) {
-        return reject(warning);
-      }
 
-      return value as Claims;
+      return resolve(value as Claims);
     } catch (err) {
       return reject(err);
     }
