@@ -1,20 +1,22 @@
 import config from "config";
 
-import {Server} from "@hapi/hapi";
+import {Server, ServerInjectOptions} from "@hapi/hapi";
 import {compose} from "@hapi/glue";
 
 import {Database, initPool} from "./db";
 import {AuthService} from "./services";
 import {AuthController} from "./controllers";
-import {Controller} from "./controllers/controller";
+import {registerJWTAuthStrategy} from "./plugins";
+import {Routes} from "./routes/common";
+import {AuthRoutes} from "./routes/auth.routes";
 
 /**
  * Application initialises the API service and all of its dependencies
  */
 export class Application {
-  private svc?: Server;
+  public svc?: Server;
 
-  private readonly controllers: Controller[] = [];
+  private readonly routes: Routes[] = [];
 
   constructor() {
     // MARK: initialise all dependencies for the application here
@@ -24,8 +26,10 @@ export class Application {
     // Service initialisation
     const authService = new AuthService(database);
 
+    const authControllers = new AuthController(database, authService);
+
     // Controller initialisation
-    this.controllers.push(new AuthController(database, authService));
+    this.routes.push(new AuthRoutes(authControllers));
   }
 
   /**
@@ -60,13 +64,21 @@ export class Application {
         relativeTo: __dirname
       });
 
-      for (const controller of this.controllers) {
-        controller.registerController(this.svc);
+      registerJWTAuthStrategy(this.svc);
+      for (const route of this.routes) {
+        route.register(this.svc);
       }
 
       await this.svc.start();
     } catch (err) {
       throw new Error(`unable to start application server: ${err}`)
     }
+  }
+
+  async stop() {
+    if (!this.svc) {
+      return;
+    }
+    return this.svc.stop();
   }
 }

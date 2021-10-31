@@ -1,35 +1,20 @@
 import type {Request, ResponseToolkit, Server, ServerAuthScheme} from "@hapi/hapi";
 import Boom from "@hapi/boom";
-import type {Res} from "./common";
+import type {Res} from "../routes/common";
 
 import Joi from "joi";
 
-import {Database} from "../db";
-import {AuthService} from "../services";
-import {decodeAccessToken, decodeRefreshToken, encodeAccessToken, encodeRefreshToken, generateClaims} from "../utils";
-import { getLogger } from "./common";
+import {IDatabase} from "../db";
+import {IAuthService} from "../services";
+import {decodeRefreshToken, encodeAccessToken, encodeRefreshToken, generateClaims} from "../utils";
 import {Account, AccountToken} from "../models";
-import {Controller} from "./controller";
-
-const SCHEME_NAME = 'jwt';
-
-const loginSchema = Joi.object().keys({
-  email: Joi.string().email().min(3).max(256).required(),
-  password: Joi.string().min(8).max(128).required(),
-});
-const registerSchema = Joi.object().keys({
-  name: Joi.string().min(1).max(64).required(),
-  email: Joi.string().email().min(3).max(256).required(),
-  password: Joi.string().min(8).max(128).required(),
-});
-const refreshSchema = Joi.object().keys({
-  token: Joi.string().required(),
-});
+import {RouteOptionsValidate} from "@hapi/hapi";
+import P from "pino";
 
 /**
  * Parameter body for `login`
  */
-type LoginRequest = {
+export type LoginRequest = {
   /**
    * Email address to sign in with
    */
@@ -43,7 +28,7 @@ type LoginRequest = {
 /**
  * Result from `login`
  */
-type LoginResponse = {
+export type LoginResponse = {
   /**
    * Refresh token to generate further access tokens
    */
@@ -57,7 +42,7 @@ type LoginResponse = {
 /**
  * Parameter body for `register`
  */
-type RegisterRequest = {
+export type RegisterRequest = {
   /**
    * Email address to register with
    */
@@ -75,7 +60,7 @@ type RegisterRequest = {
 /**
  * Result from `register`
  */
-type RegisterResponse = {
+export type RegisterResponse = {
   /**
    * Refresh token to generate further access tokens
    */
@@ -89,7 +74,7 @@ type RegisterResponse = {
 /**
  * Parameter body for `refresh`
  */
-type RefreshRequest = {
+export type RefreshRequest = {
   /**
    * Refresh token to generate a new access token for
    */
@@ -99,92 +84,68 @@ type RefreshRequest = {
 /**
  * Result from `refresh`
  */
-type RefreshResponse = {
+export type RefreshResponse = {
   /**
    * Access token to authenticate requests with
    */
   access_token: string;
 }
 
+export interface IAuthController {
+  /**
+   * Login authenticates the provided credentials
+   * @param logger {Logger} Logger reference to use with this controller
+   * @param req {LoginRequest} a pre-validated login request
+   * @return {Res<LoginResponse>} response payload
+   */
+  login(logger: P.Logger, req: LoginRequest): Promise<Res<LoginResponse>>;
+  get loginValidate(): RouteOptionsValidate | undefined;
+
+  /**
+   * Register creates a new account with the provided parameters
+   * @param logger {Logger} Logger reference to use with this controller
+   * @param req {RegisterRequest} a pre-validated register request
+   * @return {Res<LoginResponse>} response payload
+   */
+  register(logger: P.Logger, req: RegisterRequest): Promise<Res<RegisterResponse>>;
+  get registerValidate(): RouteOptionsValidate | undefined;
+
+  /**
+   * Refresh generates a new access token using the provided refresh token
+   * @param logger {Logger} Logger reference to use with this controller
+   * @param req {RefreshRequest} a pre-validated refresh request object
+   * @return {Res<RefreshResponse>} response payload
+   */
+  refresh(logger: P.Logger, req: RefreshRequest): Promise<Res<RefreshResponse>>;
+  get refreshValidate(): RouteOptionsValidate | undefined;
+}
+
 /**
  * Authentication controller implementing routes
  */
-export class AuthController extends Controller {
-  public constructor(private readonly db: Database, private readonly authService: AuthService) {
-    super();
+export class AuthController implements IAuthController {
+  public constructor(private readonly db: IDatabase, private readonly authService: IAuthService) {
     this.login = this.login.bind(this);
     this.register = this.register.bind(this);
     this.refresh = this.refresh.bind(this);
   }
 
-  /**
-   * register the routes from this controller with hapi
-   * @param svc {Server} hapi service reference
-   */
-  public registerController(svc: Server) {
-    svc.auth.scheme(SCHEME_NAME, () => {
-      return {
-        authenticate: async (req: Request, h: ResponseToolkit): Promise<Res<unknown>> => {
-          const {authorization} = req.headers;
-          if (!authorization) {
-            return Boom.unauthorized(null, SCHEME_NAME);
-          }
-          const claims = await decodeAccessToken(authorization);
-
-          return h.authenticated({ credentials: claims });
-        }
-      }
-    });
-    svc.auth.strategy(SCHEME_NAME, SCHEME_NAME);
-    svc.auth.default(SCHEME_NAME);
-
-    svc.route({
-      method: "POST",
-      path: "/login",
-      handler: this.login,
-      options: {
-        auth: false,
-        validate: {
-          payload: loginSchema
-        }
-      }
-    });
-
-    svc.route({
-      method: "POST",
-      path: "/register",
-      handler: this.register,
-      options: {
-        auth: false,
-        validate: {
-          payload: registerSchema
-        }
-      }
-    });
-
-    svc.route({
-      method: "POST",
-      path: "/refresh",
-      handler: this.refresh,
-      options: {
-        auth: false,
-        validate: {
-          payload: refreshSchema
-        }
-      }
-    })
+  public get loginValidate(): RouteOptionsValidate | undefined {
+    return {
+      payload: Joi.object().keys({
+        email: Joi.string().email().min(3).max(256).required(),
+        password: Joi.string().min(8).max(128).required(),
+      })
+    };
   }
-
   /**
-   * @private
    * Login authenticates the provided credentials
-   * @param req {Request} hapi request object
-   * @param h {ResponseToolkit} hapi response toolkit
+   * @param logger {Logger} Logger reference to use with this controller
+   * @param req {LoginRequest} a pre-validated login request
    * @return {Res<LoginResponse>} response payload
    */
-  private async login(req: Request, h: ResponseToolkit): Promise<Res<LoginResponse>> {
-    const logger = getLogger(req);
-    const {email, password} = req.payload as LoginRequest;
+  public async login(logger: P.Logger, req: LoginRequest): Promise<Res<LoginResponse>> {
+    const {email, password} = req;
 
     const tx = await this.db.tx()
 
@@ -226,16 +187,24 @@ export class AuthController extends Controller {
     };
   }
 
+  get registerValidate(): RouteOptionsValidate | undefined {
+    return {
+      payload: Joi.object().keys({
+        name: Joi.string().min(1).max(64).required(),
+        email: Joi.string().email().min(3).max(256).required(),
+        password: Joi.string().min(8).max(128).required(),
+      })
+    };
+  }
+
   /**
-   * @private
    * Register creates a new account with the provided parameters
-   * @param req {Request} hapi request object
-   * @param h {ResponseToolkit} hapi response toolkit
+   * @param logger {Logger} Logger reference to use with this controller
+   * @param req {RegisterRequest} a pre-validated register request
    * @return {Res<LoginResponse>} response payload
    */
-  private async register(req: Request, h: ResponseToolkit): Promise<Res<RegisterResponse>> {
-    const logger = getLogger(req);
-    const { email, password, name } = req.payload as RegisterRequest;
+  public async register(logger: P.Logger, req: RegisterRequest): Promise<Res<RegisterResponse>> {
+    const { email, password, name } = req;
 
     const tx = await this.db.tx();
 
@@ -278,16 +247,22 @@ export class AuthController extends Controller {
     };
   }
 
+  get refreshValidate(): RouteOptionsValidate | undefined {
+    return {
+      payload: Joi.object().keys({
+        token: Joi.string().required(),
+      })
+    };
+  }
+
   /**
-   * @private
    * Refresh generates a new access token using the provided refresh token
-   * @param req {Request} hapi request object
-   * @param h {ResponseToolkit} hapi response toolkit
+   * @param logger {Logger} Logger reference to use with this controller
+   * @param req {RefreshRequest} a pre-validated refresh request object
    * @return {Res<RefreshResponse>} response payload
    */
-  private async refresh(req: Request, h: ResponseToolkit): Promise<Res<RefreshResponse>> {
-    const logger = getLogger(req);
-    const { token } = req.payload as RefreshRequest;
+  public async refresh(logger: P.Logger, req: RefreshRequest): Promise<Res<RefreshResponse>> {
+    const { token } = req;
 
     const decoded = await decodeRefreshToken(token);
 

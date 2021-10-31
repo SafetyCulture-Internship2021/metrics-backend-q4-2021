@@ -1,3 +1,10 @@
+/**
+ * Crypto - Hash password tests
+ *
+ * @group unit
+ * @group unit/utils/crypto
+ */
+
 import {hashPassword, verifyPassword} from "./crypto";
 
 // this is 'password' in plaintext

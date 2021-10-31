@@ -5,7 +5,7 @@ import {v4 as uuid} from "uuid";
 
 import {ensureConn, ServiceCallOpts} from "./common";
 import {hashPassword, verifyPassword} from "../utils";
-import {DBError, DBErrorCode} from "../db/types";
+import {DBError, DBErrorCode} from "../db";
 
 /**
  * Parameters for `createAccount`
@@ -41,9 +41,54 @@ type FetchAccountByLoginParams = {
 }
 
 /**
+ * Authentication service interface
+ */
+export interface IAuthService {
+  /**
+   * Creates a new account with the supplied parameters
+   * @param params {CreateAccountParams} parameters to be used in the creation of a new account
+   * @param opts {ServiceCallOpts?} options for this service function call
+   * @return {Account} created account
+   */
+  createAccount(params: CreateAccountParams, opts?: ServiceCallOpts): Promise<Account | undefined>;
+
+  /**
+   * Fetch an account by their email address and password
+   * @param params {FetchAccountByLoginParams} parameters to be used to fetch an account with
+   * @param opts {ServiceCallOpts?} options for this service function call
+   * @return {Account} found account
+   */
+  fetchAccountByLogin(params: FetchAccountByLoginParams, opts?: ServiceCallOpts): Promise<Account | undefined>;
+
+  /**
+   * Fetch an account by its id
+   * @param id {string} UUID of the account
+   * @param opts {ServiceCallOpts?} options for this service function call
+   * @return {Account} found account
+   */
+  fetchAccount(id: string, opts?: ServiceCallOpts): Promise<Account | undefined>;
+
+  /**
+   * Create a new token for a specified account
+   * @param account_id {string} UUID of the account to create this token for
+   * @param opts {ServiceCallOpts?} options for this service function call
+   * @return {AccountToken} created account token
+   */
+  createAccountToken(account_id: string, opts?: ServiceCallOpts): Promise<AccountToken>;
+
+  /**
+   * Fetch an account token by its id
+   * @param id {string} UUID of the token
+   * @param opts {ServiceCallOpts?} options for this service function call
+   * @return {AccountToken} found account token
+   */
+  fetchAccountToken(id: string, opts?: ServiceCallOpts): Promise<AccountToken | undefined>;
+}
+
+/**
  * Authentication service
  */
-export class AuthService {
+export class AuthService implements IAuthService {
   /**
    * @param database {Database} reference to the database
    */
@@ -62,7 +107,7 @@ export class AuthService {
    * @return {Account} created account
    */
   async createAccount(params: CreateAccountParams, opts?: ServiceCallOpts): Promise<Account | undefined> {
-    const conn = await ensureConn(this.database, opts);
+    const conn = ensureConn(this.database, opts);
     const hash = await hashPassword(params.password);
 
     let rows: Account[];
@@ -75,8 +120,7 @@ export class AuthService {
       rows = queryRows;
 
       if (rows.length != 1) {
-        throw new Error(
-          `invalid number of rows returned from insert operation: expected 1, received: ${rows.length}`);
+        return;
       }
 
       return rows[0]
@@ -98,7 +142,7 @@ export class AuthService {
    */
   async fetchAccountByLogin(params: FetchAccountByLoginParams, opts?: ServiceCallOpts): Promise<Account | undefined> {
     const {email, password} = params;
-    const conn = await ensureConn(this.database, opts);
+    const conn = ensureConn(this.database, opts);
 
     const {rows} = await conn.query<Account>(`
       SELECT *
@@ -119,13 +163,31 @@ export class AuthService {
   }
 
   /**
+   * Fetch an account by its id
+   * @param id {string} UUID of the account
+   * @param opts {ServiceCallOpts?} options for this service function call
+   * @return {Account} found account
+   */
+  async fetchAccount(id: string, opts?: ServiceCallOpts): Promise<Account | undefined> {
+    const conn = ensureConn(this.database, opts);
+
+    const {rows} = await conn.query<Account>(`
+        SELECT *
+        FROM accounts
+        WHERE id = $1
+      `, [id]);
+
+    return rows.length >= 1 ? rows[0] : undefined;
+  }
+
+  /**
    * Create a new token for a specified account
    * @param account_id {string} UUID of the account to create this token for
    * @param opts {ServiceCallOpts?} options for this service function call
    * @return {AccountToken} created account token
    */
   async createAccountToken(account_id: string, opts?: ServiceCallOpts): Promise<AccountToken> {
-    const conn = await ensureConn(this.database, opts);
+    const conn = ensureConn(this.database, opts);
 
     const {rows} = await conn.query<AccountToken>(`
       INSERT INTO account_tokens(id, account_id)
@@ -142,31 +204,13 @@ export class AuthService {
   }
 
   /**
-   * Fetch an account by its id
-   * @param id {string} UUID of the account
-   * @param opts {ServiceCallOpts?} options for this service function call
-   * @return {Account} found account
-   */
-  async fetchAccount(id: string, opts?: ServiceCallOpts): Promise<Account | undefined> {
-      const conn = await ensureConn(this.database, opts);
-
-      const {rows} = await conn.query<Account>(`
-        SELECT *
-        FROM accounts
-        WHERE id = $1
-      `, [id]);
-
-      return rows.length >= 1 ? rows[0] : undefined;
-  }
-
-  /**
    * Fetch an account token by its id
    * @param id {string} UUID of the token
    * @param opts {ServiceCallOpts?} options for this service function call
    * @return {AccountToken} found account token
    */
   async fetchAccountToken(id: string, opts?: ServiceCallOpts): Promise<AccountToken | undefined> {
-    const conn = await ensureConn(this.database, opts);
+    const conn = ensureConn(this.database, opts);
 
     const {rows} = await conn.query<AccountToken>(`
       SELECT *

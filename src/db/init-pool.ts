@@ -1,11 +1,13 @@
+import type {IPool} from "./types";
+
 import config from "config";
 import {Pool} from "pg";
 
 /**
  * initPool will initialise a new postgres pool object with the application config
- * @return {Pool} the initialised pool
+ * @return {IPool} the initialised pool
  */
-export function initPool(): Pool {
+export function initPool(): IPool {
     return new Pool({
         host: config.get('db.host') || 'localhost',
         port: config.get('db.port') || 5432,

@@ -1,12 +1,20 @@
+/**
+ * Token tests
+ *
+ * @group unit
+ * @group unit/utils/token
+ */
+
+// @ts-ignore
 import config from "config";
-import {install as mockClock, InstalledClock} from "@sinonjs/fake-timers";
+// @ts-ignore
 import jwt from "jsonwebtoken";
+import {install as mockClock, InstalledClock} from "@sinonjs/fake-timers";
 
 import {Account, AccountToken} from "../models";
 import {decodeAccessToken, decodeRefreshToken, encodeAccessToken, encodeRefreshToken, generateClaims} from "./token";
 
 const ValidJWT = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X2lkIjoiNTJhNzQ4ODUtNDA5OC00NmMzLTlhNDUtMTBhNzZlMjU4ODAwIiwiYWNjb3VudF9uYW1lIjoiSm9obiBTbWl0aCIsImFjY291bnRfZW1haWwiOiJqb2huLnNtaXRoQGV4YW1wbGUuY29tIiwidG9rZW5faWQiOiJlZWNlZDcyMC0xNjQ4LTQ3MTEtYjcyNi05ZDI4MWU3MzVjNjgiLCJpYXQiOjE1Nzc4MzY4MDAsImV4cCI6MTU3NzgzNzEwMCwiYXVkIjoidGVzdCIsImlzcyI6InRlc3QiLCJzdWIiOiJ0ZXN0In0.C_M9_N0NZ8zXtX2CtSFlTi5HKsGB_w4Nt0hD1ehpCE90xFKDnB2InAITkCClwzSZSoPkLgtEIIzQUmv5YjFhCQ";
-const InvalidJWT = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X2lkIjoiNTJhNzQ4ODUtNDA5OC00NmMzLTlhNDUtMTBhNzZlMjU4ODAwIiwiYWNjb3VudF9uYW1lIjoiSm9obiBTbWl0aCIsImFjY291bnRfZW1haWwiOiJqb2huLnNtaXRoQGV4YW1wbGUuY29tIiwidG9rZW5faWQiOiJlZWNlZDcyMC0xNjQ4LTQ3MTEtYjcyNi05ZDI4MWU3MzVjNjgiLCJpYXQiOjE1Nzc4MzY4MDAsImV4cCI6MTU3NzgzNzEwMCwiYXVkIjoidGVzdCIsImlzcyI6InRlc3QiLCJzdWIiOiJ0ZXN0In0.C_M9_N0NZ8zXtX2CtSFlTi5HKsGB_w4Nt0hD1ehpCE90xFKDnB2InAITkCClwzSZQUmv5YjFhCQ";
 
 describe("token", () => {
   let clock: InstalledClock;
