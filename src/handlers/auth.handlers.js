@@ -26,16 +26,17 @@ export class AuthHandlers  {
     db,
     authDao
   }) {
-    this.logger = logger;
     this.db = db;
     this.authDao = authDao;
+
+    this.routes = this.routes.bind(this);
 
     this.login = this.login.bind(this);
     this.register = this.register.bind(this);
     this.refresh = this.refresh.bind(this);
   }
 
-  register(svc) {
+  routes(svc) {
     svc.route({
       method: "POST",
       path: "/login",
@@ -80,8 +81,8 @@ export class AuthHandlers  {
    * @return {Promise<Object>} response payload
    */
   async login(req, h) {
-    const { logger, payload } = req;
-    const { email, password } = payload;
+    const logger = req.logger;
+    const { email, password } = req.payload;
 
     const tx = await this.db.tx()
 
@@ -129,9 +130,9 @@ export class AuthHandlers  {
    * @param h {Object} a hapi response toolkit
    * @return {Promise<Object>} response payload
    */
-  async register(logger, req) {
-    const { logger, payload } = req;
-    const { email, password, name } = payload;
+  async register(req, h) {
+    const logger = req.logger;
+    const { email, password, name } = req.payload;
 
     const tx = await this.db.tx();
 
@@ -181,8 +182,8 @@ export class AuthHandlers  {
    * @return {Promise<Object>} response payload
    */
   async refresh(req, h) {
-    const { logger, payload } = req;
-    const { token } = payload;
+    const logger = req.logger;
+    const { token } = req.payload;
 
     const decoded = await decodeRefreshToken(token);
 

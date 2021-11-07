@@ -65,7 +65,7 @@ export class Application {
 
       registerJWTAuthStrategy(this.svc);
       for (const route of this.routes) {
-        route.register(this.svc);
+        route.routes(this.svc);
       }
 
       await this.svc.start();

@@ -19,11 +19,12 @@
     "moduleResolution": "node",
     /* Specify the base directory to resolve non-relative module names. */
     "baseUrl": "src",
+    "allowJs": true,
 
     /* Emit */
     /* Generate .d.ts files from TypeScript and JavaScript files in your project. */
     "declaration": true,
-    /* Create sourcemaps for d.ts files. */
+    /* Create sourcemaps for d.  files. */
     "declarationMap": true,
     /* Create source map files for emitted JavaScript files. */
     "sourceMap": true,
