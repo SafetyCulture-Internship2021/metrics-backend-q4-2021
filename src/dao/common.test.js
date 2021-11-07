@@ -1,24 +1,22 @@
+import {ensureConn} from "./common";
+
 /**
  * Common service tests
  *
  * @group unit
  * @group unit/services/common
  */
-
-import {IDatabase, ITx} from "../db";
-import {ensureConn} from "./common";
-
 describe("common", () => {
   describe("ensureConn()", () => {
     it("returns the transaction connection ref if provided", () => {
-      const db: IDatabase = {
+      const db = {
         pool: {
           query: jest.fn(),
           connect: jest.fn()
         },
         tx: jest.fn()
       };
-      const tx: ITx = {
+      const tx = {
         conn: {
           query: jest.fn()
         },
@@ -33,7 +31,7 @@ describe("common", () => {
     });
 
     it("returns a non-transaction ref otherwise", () => {
-      const db: IDatabase = {
+      const db = {
         pool: {
           query: jest.fn(),
           connect: jest.fn()

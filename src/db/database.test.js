@@ -1,22 +1,20 @@
+import {Database} from "./database";
+
 /**
  * Database tests
  *
  * @group unit
  * @group unit/db/database
  */
-
-import {IPool, IPoolConnection} from "./types";
-import {Database} from "./database";
-
 describe("database", () => {
   describe("tx", () => {
     it("initialises a new transaction", async () => {
-      const poolConn: IPoolConnection = {
+      const poolConn = {
         query: jest.fn(),
         release: jest.fn()
       }
 
-      const pool: IPool = {
+      const pool = {
         connect: jest.fn().mockResolvedValue(poolConn),
         query: jest.fn()
       };

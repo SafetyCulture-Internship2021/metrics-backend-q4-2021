@@ -1,17 +1,15 @@
+import {Tx} from "./transaction";
+
 /**
  * Integration tests
  *
  * @group unit
  * @group unit/db/transaction
  */
-
-import {IPoolConnection} from "./types";
-import {Tx} from "./transaction";
-
 describe("transaction", () => {
   describe("commit", () => {
     it("executes the commit command once and releases the conn", async () => {
-      const poolConn: IPoolConnection = {
+      const poolConn = {
         query: jest.fn().mockResolvedValue(undefined),
         release: jest.fn()
       };
@@ -31,7 +29,7 @@ describe("transaction", () => {
 
   describe("rollback", () => {
     it("executes the rollback command once and releases the conn", async () => {
-      const poolConn: IPoolConnection = {
+      const poolConn = {
         query: jest.fn().mockResolvedValue(undefined),
         release: jest.fn()
       };

@@ -1,14 +1,14 @@
+import {hashPassword, verifyPassword} from "./crypto";
+
+// this is 'password' in plaintext
+const PRE_HASHED = "$2b$12$PE01lbaDW9b5TWynQQIc6Oa7OEHWYQO3CL4qY4oRqDY/5gTwFSHfy";
+
 /**
  * Crypto - Hash password tests
  *
  * @group unit
  * @group unit/utils/crypto
  */
-
-import {hashPassword, verifyPassword} from "./crypto";
-
-// this is 'password' in plaintext
-const PRE_HASHED = "$2b$12$PE01lbaDW9b5TWynQQIc6Oa7OEHWYQO3CL4qY4oRqDY/5gTwFSHfy";
 describe("crypto", () => {
   describe("hashPassword", () => {
     it("hashes a password as expected", async () => {

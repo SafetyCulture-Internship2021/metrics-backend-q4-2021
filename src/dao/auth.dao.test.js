@@ -1,22 +1,19 @@
-/**
- * Auth service tests
- */
 import {install as installClock, InstalledClock} from "@sinonjs/fake-timers";
-import {AuthService} from "./auth.service";
-import {DBErrorCode, ITx} from "../db";
+import {AuthDao} from "./auth.dao";
+import {DBErrorCode} from "../db";
 
 jest.mock("uuid", () => ({
   v4: () => "eeced720-1648-4711-b726-9d281e735c68"
 }));
 jest.mock("../utils", () => ({
-  hashPassword: (plaintext: string) => "hashed" + plaintext,
-  verifyPassword: (pass: string, hash: string): boolean => {
+  hashPassword: (plaintext) => "hashed" + plaintext,
+  verifyPassword: (pass, hash) => {
     return pass === "validpassword";
   },
 }));
 
 describe("auth.service", () => {
-  let clock: InstalledClock;
+  let clock;
 
   beforeAll(() => {
     clock = installClock({now: new Date(Date.UTC(2020, 0, 1))});
@@ -29,15 +26,9 @@ describe("auth.service", () => {
    * @group unit/services/auth
    */
   describe("unit", () => {
-    let tx: {
-      conn: {
-        query: jest.Mock;
-      };
-      commit?: jest.Mock;
-      rollback?: jest.Mock;
-    };
+    let tx;
     let db;
-    let service: AuthService;
+    let service;
 
     beforeEach(() => {
       tx = {
@@ -56,7 +47,7 @@ describe("auth.service", () => {
         tx: jest.fn()
       };
 
-      service = new AuthService(db);
+      service = new AuthDao(db);
     });
 
     describe("createAccount", () => {
@@ -75,7 +66,7 @@ describe("auth.service", () => {
           email: "john.smith@example.com",
           password: "password",
           name: "John Smith"
-        }, { tx: tx as ITx });
+        }, { tx });
 
         expect(account).toStrictEqual({
           id: "eeced720-1648-4711-b726-9d281e735c68",
@@ -99,7 +90,7 @@ describe("auth.service", () => {
           email: "john.smith@example.com",
           password: "password",
           name: "John Smith"
-        }, { tx: tx as ITx });
+        }, { tx });
 
         expect(account).toBeUndefined()
         expect(tx.conn.query).toHaveBeenCalledWith(expect.anything(), [
@@ -117,7 +108,7 @@ describe("auth.service", () => {
           email: "john.smith@example.com",
           password: "password",
           name: "John Smith"
-        }, { tx: tx as ITx });
+        }, { tx });
 
         expect(account).toBeUndefined()
         expect(tx.conn.query).toHaveBeenCalledWith(expect.anything(), [
@@ -134,7 +125,7 @@ describe("auth.service", () => {
             email: "john.smith@example.com",
             password: "password",
             name: "John Smith"
-          }, { tx: tx as ITx });
+          }, { tx });
 
           // If we've reached this line, we didn't throw
           expect(true).toBe(false);
@@ -155,7 +146,7 @@ describe("auth.service", () => {
             created_at: new Date()
           }]
         });
-        const account = await service.fetchAccount("account-id-fake", { tx: tx as ITx });
+        const account = await service.fetchAccount("account-id-fake", { tx });
 
         expect(account).toStrictEqual({
           id: "eeced720-1648-4711-b726-9d281e735c68",
@@ -173,7 +164,7 @@ describe("auth.service", () => {
         tx.conn.query.mockResolvedValue({
           rows: []
         });
-        const account = await service.fetchAccount("account-id-fake", { tx: tx as ITx });
+        const account = await service.fetchAccount("account-id-fake", { tx });
 
         expect(account).toBeUndefined()
         expect(tx.conn.query).toHaveBeenCalledWith(expect.anything(), [
@@ -184,7 +175,7 @@ describe("auth.service", () => {
       it("should throw an error if any database error is encountered", async () => {
         tx.conn.query.mockRejectedValue(new Error("boom"));
         try {
-          await service.fetchAccount("account-id-fake", { tx: tx as ITx });
+          await service.fetchAccount("account-id-fake", { tx });
 
           // If we've reached this line, we didn't throw
           expect(true).toBe(false);
@@ -209,7 +200,7 @@ describe("auth.service", () => {
         const account = await service.fetchAccountByLogin({
           email: "john.smith@example.com",
           password: "validpassword",
-        }, { tx: tx as ITx });
+        }, { tx });
 
         expect(account).toStrictEqual({
           id: "eeced720-1648-4711-b726-9d281e735c68",
@@ -231,7 +222,7 @@ describe("auth.service", () => {
         const account = await service.fetchAccountByLogin({
           email: "john.smith@example.com",
           password: "validpassword",
-        }, { tx: tx as ITx });
+        }, { tx });
 
         expect(account).toBeUndefined();
         expect(tx.conn.query).toHaveBeenCalledWith(expect.anything(), [
@@ -253,7 +244,7 @@ describe("auth.service", () => {
         const account = await service.fetchAccountByLogin({
           email: "john.smith@example.com",
           password: "invalidpassword",
-        }, { tx: tx as ITx });
+        }, { tx });
 
         expect(account).toBeUndefined();
         expect(tx.conn.query).toHaveBeenCalledWith(expect.anything(), [
@@ -267,7 +258,7 @@ describe("auth.service", () => {
           await service.fetchAccountByLogin({
             email: "john.smith@example.com",
             password: "invalidpassword",
-          }, { tx: tx as ITx });
+          }, { tx });
 
           // If we've reached this line, we didn't throw
           expect(true).toBe(false);
@@ -287,7 +278,7 @@ describe("auth.service", () => {
           }]
         });
 
-        const token = await service.createAccountToken("eeced720-1648-4711-b726-9d281e735c68", { tx: tx as ITx });
+        const token = await service.createAccountToken("eeced720-1648-4711-b726-9d281e735c68", { tx });
 
         expect(token).toStrictEqual({
           id: "eeced720-1648-4711-b726-9d281e735c68",
@@ -306,13 +297,11 @@ describe("auth.service", () => {
         });
 
         try {
-          await service.createAccountToken("eeced720-1648-4711-b726-9d281e735c68", {
-            tx: tx as ITx });
+          await service.createAccountToken("eeced720-1648-4711-b726-9d281e735c68", { tx });
 
           // If we've reached this line, we didn't throw
           expect(true).toBe(false);
         } catch (err) {
-          // @ts-ignore
           const {message} = err;
           expect(message).toBe("invalid number of rows returned from insert operation: expected 1, received: 0")
         }
@@ -325,8 +314,7 @@ describe("auth.service", () => {
       it("should throw an error if any other database error is encountered", async () => {
         tx.conn.query.mockRejectedValue(new Error("boom"));
         try {
-          await service.createAccountToken("eeced720-1648-4711-b726-9d281e735c68", {
-            tx: tx as ITx });
+          await service.createAccountToken("eeced720-1648-4711-b726-9d281e735c68", { tx });
 
           // If we've reached this line, we didn't throw
           expect(true).toBe(false);
@@ -346,7 +334,7 @@ describe("auth.service", () => {
           }]
         });
 
-        const token = await service.fetchAccountToken("eeced720-1648-4711-b726-9d281e735c68", { tx: tx as ITx });
+        const token = await service.fetchAccountToken("eeced720-1648-4711-b726-9d281e735c68", { tx });
 
         expect(token).toStrictEqual({
           id: "eeced720-1648-4711-b726-9d281e735c68",
@@ -363,7 +351,7 @@ describe("auth.service", () => {
           rows: []
         });
 
-        const token = await service.fetchAccountToken("eeced720-1648-4711-b726-9d281e735c68", { tx: tx as ITx });
+        const token = await service.fetchAccountToken("eeced720-1648-4711-b726-9d281e735c68", { tx });
 
         expect(token).toBeUndefined();
         expect(tx.conn.query).toHaveBeenCalledWith(expect.anything(), [
@@ -374,7 +362,7 @@ describe("auth.service", () => {
       it("should throw an error if any database error is encountered", async () => {
         tx.conn.query.mockRejectedValue(new Error("boom"));
         try {
-          await service.fetchAccountToken("eeced720-1648-4711-b726-9d281e735c68", { tx: tx as ITx });
+          await service.fetchAccountToken("eeced720-1648-4711-b726-9d281e735c68", { tx });
 
           // If we've reached this line, we didn't throw
           expect(true).toBe(false);

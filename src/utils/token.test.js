@@ -1,23 +1,19 @@
+import config from "config";
+import jwt from "jsonwebtoken";
+import {install as mockClock} from "@sinonjs/fake-timers";
+
+import {decodeAccessToken, decodeRefreshToken, encodeAccessToken, encodeRefreshToken, generateClaims} from "./token";
+
+const ValidJWT = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X2lkIjoiNTJhNzQ4ODUtNDA5OC00NmMzLTlhNDUtMTBhNzZlMjU4ODAwIiwiYWNjb3VudF9uYW1lIjoiSm9obiBTbWl0aCIsImFjY291bnRfZW1haWwiOiJqb2huLnNtaXRoQGV4YW1wbGUuY29tIiwidG9rZW5faWQiOiJlZWNlZDcyMC0xNjQ4LTQ3MTEtYjcyNi05ZDI4MWU3MzVjNjgiLCJpYXQiOjE1Nzc4MzY4MDAsImV4cCI6MTU3NzgzNzEwMCwiYXVkIjoidGVzdCIsImlzcyI6InRlc3QiLCJzdWIiOiJ0ZXN0In0.C_M9_N0NZ8zXtX2CtSFlTi5HKsGB_w4Nt0hD1ehpCE90xFKDnB2InAITkCClwzSZSoPkLgtEIIzQUmv5YjFhCQ";
+
 /**
  * Token tests
  *
  * @group unit
  * @group unit/utils/token
  */
-
-// @ts-ignore
-import config from "config";
-// @ts-ignore
-import jwt from "jsonwebtoken";
-import {install as mockClock, InstalledClock} from "@sinonjs/fake-timers";
-
-import {Account, AccountToken} from "../models";
-import {decodeAccessToken, decodeRefreshToken, encodeAccessToken, encodeRefreshToken, generateClaims} from "./token";
-
-const ValidJWT = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X2lkIjoiNTJhNzQ4ODUtNDA5OC00NmMzLTlhNDUtMTBhNzZlMjU4ODAwIiwiYWNjb3VudF9uYW1lIjoiSm9obiBTbWl0aCIsImFjY291bnRfZW1haWwiOiJqb2huLnNtaXRoQGV4YW1wbGUuY29tIiwidG9rZW5faWQiOiJlZWNlZDcyMC0xNjQ4LTQ3MTEtYjcyNi05ZDI4MWU3MzVjNjgiLCJpYXQiOjE1Nzc4MzY4MDAsImV4cCI6MTU3NzgzNzEwMCwiYXVkIjoidGVzdCIsImlzcyI6InRlc3QiLCJzdWIiOiJ0ZXN0In0.C_M9_N0NZ8zXtX2CtSFlTi5HKsGB_w4Nt0hD1ehpCE90xFKDnB2InAITkCClwzSZSoPkLgtEIIzQUmv5YjFhCQ";
-
 describe("token", () => {
-  let clock: InstalledClock;
+  let clock;
   beforeAll(() => {
     clock = mockClock({
       now: new Date(Date.UTC(2020, 0, 1))
@@ -30,7 +26,7 @@ describe("token", () => {
 
   describe("generateClaims", () => {
     it("should generate a claims object successfully", () => {
-      const account: Account = {
+      const account = {
         id: "52a74885-4098-46c3-9a45-10a76e258800",
         email: "john.smith@example.com",
         // this is 'password' in plaintext
@@ -38,7 +34,7 @@ describe("token", () => {
         name: "John Smith",
         created_at: new Date(),
       };
-      const token: AccountToken = {
+      const token = {
         id: "eeced720-1648-4711-b726-9d281e735c68",
         account_id: "52a74885-4098-46c3-9a45-10a76e258800",
         // Midnight 1st Jan 2020
@@ -72,7 +68,7 @@ describe("token", () => {
 
   describe("encodeRefreshToken",  () => {
     it("should encode a token successfully", async () => {
-      const input: AccountToken = {
+      const input = {
         id: "eeced720-1648-4711-b726-9d281e735c68",
         account_id: "52a74885-4098-46c3-9a45-10a76e258800",
         // Midnight 1st Jan 2020
