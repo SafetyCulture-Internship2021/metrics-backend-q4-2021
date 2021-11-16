@@ -19,7 +19,7 @@ const refreshSchema = Joi.object().keys({
 });
 
 /**
- * Authentication controller implementing routes
+ * Authentication routes and handlers
  */
 export class AuthHandlers  {
   constructor({

@@ -1,5 +1,7 @@
 {
   "name": "metrics-backend",
+  "description": "",
+  "version": "0.0.1",
   "scripts": {
     "start": "NODE_ENV=production node ./dist/index.js",
     "start:dev": "NODE_ENV=development node ./dist/index.js",
@@ -13,7 +15,6 @@
   "engines": {
     "node": ">=16 <17"
   },
-  "version": "0.0.1",
   "dependencies": {
     "@hapi/boom": "^9.1.4",
     "@hapi/glue": "^8.0.0",
