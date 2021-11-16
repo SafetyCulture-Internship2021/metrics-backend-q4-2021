@@ -39,7 +39,7 @@ export class AuthHandlers  {
   routes(svc) {
     svc.route({
       method: "POST",
-      path: "/login",
+      path: "/auth/login",
       handler: this.login,
       options: {
         auth: false,
@@ -51,7 +51,7 @@ export class AuthHandlers  {
 
     svc.route({
       method: "POST",
-      path: "/register",
+      path: "/auth/register",
       handler: this.register,
       options: {
         auth: false,
@@ -63,7 +63,7 @@ export class AuthHandlers  {
 
     svc.route({
       method: "POST",
-      path: "/refresh",
+      path: "/auth/refresh",
       handler: this.refresh,
       options: {
         auth: false,
