@@ -10,6 +10,9 @@
     "test:unit": "jest --group=unit",
     "test:integration": "jest --group=integration"
   },
+  "engines": {
+    "node": ">=16 <17"
+  },
   "version": "0.0.1",
   "dependencies": {
     "@hapi/boom": "^9.1.4",
