@@ -1,40 +1,39 @@
 import config from "config";
-
-import {Server, ServerInjectOptions} from "@hapi/hapi";
 import {compose} from "@hapi/glue";
 
-import {Database, initPool} from "./db";
-import {AuthService} from "./services";
-import {AuthController} from "./controllers";
 import {registerJWTAuthStrategy} from "./plugins";
-import {Routes} from "./routes/common";
-import {AuthRoutes} from "./routes/auth.routes";
+import {Database, initPool} from "./db";
+import {AuthDao} from "./dao";
+import {AuthHandlers} from "./handlers/auth.handlers";
 
 /**
  * Application initialises the API service and all of its dependencies
  */
 export class Application {
-  public svc?: Server;
-
-  private readonly routes: Routes[] = [];
-
   constructor() {
+    // Bind our class methods to the class
+    this.start = this.start.bind(this);
+    this.stop = this.stop.bind(this);
+
     // MARK: initialise all dependencies for the application here
-    const pool = initPool()
-    const database = new Database(pool);
+    const db = new Database(initPool());
 
     // Service initialisation
-    const authService = new AuthService(database);
+    const authDao = new AuthDao(db);
 
-    const authControllers = new AuthController(database, authService);
+    const authHandlers = new AuthHandlers({
+      db,
+      authDao
+    });
 
+    this.routes = [];
     // Controller initialisation
-    this.routes.push(new AuthRoutes(authControllers));
+    this.routes.push(authHandlers);
   }
 
   /**
    * Starts the application server
-   * @return Promise<void> - Promise to await for application termination
+   * @return Promise<void> Promise to await for application startup
    */
   async start() {
     try {
@@ -66,7 +65,7 @@ export class Application {
 
       registerJWTAuthStrategy(this.svc);
       for (const route of this.routes) {
-        route.register(this.svc);
+        route.routes(this.svc);
       }
 
       await this.svc.start();
@@ -75,6 +74,10 @@ export class Application {
     }
   }
 
+  /**
+   * Stops the application server
+   * @return {Promise<void>} Promise to await for application shutdown
+   */
   async stop() {
     if (!this.svc) {
       return;

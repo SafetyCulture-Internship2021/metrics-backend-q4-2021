@@ -2,29 +2,7 @@ import config from "config";
 import jwt from "jsonwebtoken";
 
 import Joi from "joi";
-import {Account, AccountToken} from "../models";
 
-/**
- * JWT Claims set
- */
-export type Claims = {
-  /**
-   * UUID of the account this token is valid for
-   */
-  account_id: string;
-  /**
-   * Display name of the account
-   */
-  account_name: string;
-  /**
-   * Email address of the account
-   */
-  account_email: string;
-  /**
-   * UUID of this token
-   */
-  token_id: string;
-};
 export const claimsSchema = Joi.object().keys({
   account_id: Joi.string().uuid().required(),
   account_name: Joi.string().required(),
@@ -34,10 +12,15 @@ export const claimsSchema = Joi.object().keys({
 
 /**
  * Generates a claims object from the supplied account and token
- * @param account {Account} account to extract claims from
- * @param token {AccountToken} token to extract claims from
+ * @param account {Object} account to extract claims from
+ * @param account.id {String} id of the account
+ * @param account.name {String} name of the account
+ * @param account.email {String} email of the account
+ * @param token {Object} token to extract claims from
+ * @param token.id {String} id of the token
+ * @return {Object} generated claim object
  */
-export function generateClaims(account: Account, token: AccountToken): Claims {
+export function generateClaims(account, token) {
   return {
     account_id: account.id,
     account_name: account.name,
@@ -48,11 +31,15 @@ export function generateClaims(account: Account, token: AccountToken): Claims {
 
 /**
  * Encode an access token from a set of claims
- * @param claims {Claims} claim set to generate the token with
+ * @param claims {Object} claim set to generate the token with
+ * @param claims.account_id {string} account id from the claims
+ * @param claims.account_name {string} account name from the claims
+ * @param claims.account_email {string} account email from the claims
+ * @param claims.token_id {string} token id from the claims
  * @return {Promise<string>} encoded JWT from the claims
  */
-export async function encodeAccessToken(claims: Claims): Promise<string> {
-  return await new Promise<string>((resolve, reject) => {
+export async function encodeAccessToken(claims) {
+  return await new Promise((resolve, reject) => {
     try {
       const tok = jwt.sign(claims, config.get('jwt.signingKey'), {
         algorithm: 'HS512',
@@ -70,19 +57,19 @@ export async function encodeAccessToken(claims: Claims): Promise<string> {
 
 /**
  * Encode a refresh token from an account token object
- * @param token {AccountToken} account token to encode
+ * @param token {Object} account token to encode
  * @return {Promise<string>} encoded refresh token
  */
-export async function encodeRefreshToken(token: AccountToken): Promise<string> {
+export async function encodeRefreshToken(token) {
   return Buffer.from(JSON.stringify(token)).toString("base64");
 }
 
 /**
  * Decode a JWT string returning the claims within
  * @param token {string} The raw JWT to verify
- * @return {Promise<Claims>} claim set that was extracted from the token
+ * @return {Promise<Object>} claim set that was extracted from the token
  */
-export async function decodeAccessToken(token: string): Promise<Claims> {
+export async function decodeAccessToken(token) {
   return await new Promise((resolve, reject) => {
     try {
       const result = jwt.verify(token, config.get('jwt.signingKey'), {
@@ -99,7 +86,7 @@ export async function decodeAccessToken(token: string): Promise<Claims> {
         return reject(error);
       }
 
-      return resolve(value as Claims);
+      return resolve(value);
     } catch (err) {
       return reject(err);
     }
@@ -109,8 +96,8 @@ export async function decodeAccessToken(token: string): Promise<Claims> {
 /**
  * Decode a refresh token returning the underlying account token
  * @param token {string} The raw refresh token to verify
- * @return {Promise<AccountToken>} account token extracted from the token
+ * @return {Promise<Object>} account token extracted from the token
  */
-export async function decodeRefreshToken(token: string): Promise<AccountToken> {
-  return JSON.parse((Buffer.from(token, "base64").toString("utf-8"))) as AccountToken;
+export async function decodeRefreshToken(token) {
+  return JSON.parse((Buffer.from(token, "base64").toString("utf-8")));
 }
