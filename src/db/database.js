@@ -23,4 +23,12 @@ export class Database {
         await conn.query("BEGIN TRANSACTION");
         return new  Tx(conn)
     }
+
+    /**
+     * Ping the database connection to ensure the engine is accessible
+     * @return {Promise<void>}
+     */
+    async ping() {
+        this.pool.query("SELECT 1");
+    }
 }
