@@ -4,7 +4,26 @@ Core backend service for the metrics application
 
 ## Getting Started
 
+- Install [nvm](https://github.com/nvm-sh/nvm)
+- Run `nvm install 16`
+- Run `npm install`
+- Start the local docker resources `docker-compose up -d --build`
+- Start live-developing the application by running `npm run watch`
+
 ## Commands
+
+Each command can be run be executing `npm run {command}` in the console
+
+| Command | Description |
+| :--- | :--- |
+| `compile` | Transpiles the source code into the /dist folder |
+| `start` | Starts the application with the PRODUCTION node environment set |
+| `start:dev` | Starts the application with the DEVELOPMENT node environment set |
+| `dev` | Executes the `compile` command, followed by the `start:dev` command |
+| `watch` | Starts a file watcher for any modifications to src files. On changes, executes the `dev` command |
+| `test:unit` | Runs all unit tests |
+| `test:integration` | Runs all integration tests (caution: this *may* wipe out any existing data in the database when run locally) |
+| `test:all` | Runs all test suites |
 
 ## Project Structure
 ### Config
@@ -39,12 +58,17 @@ Path: `/src`
 Path: `/src/dao`
 
 The DAO directory contains a number of `.js` files responsible for generating and executing queries against the database.
-Each DAO file should be responsible for a single
+Each DAO file should be responsible for a single entity within the DB
 
 #### Handlers
 Path: `/src/handlers`
 
+THe handlers directory contains a number of handlers files, each of which is responsible for defining HTTP endpoints, and registering them with the hapi instance.
+
 #### Application
 Path: `/src/application.js`
 
+`application.js` is the application entrypoint. When adding new DAOs or Handlers, they will need to be added to the application constructor.
+
 ## Routes
+
