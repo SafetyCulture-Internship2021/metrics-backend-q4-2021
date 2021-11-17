@@ -1,5 +1,7 @@
 import Boom from "@hapi/boom";
 
+import { decodeAccessToken } from "../../utils";
+
 
 const SCHEME_NAME = 'jwt';
 

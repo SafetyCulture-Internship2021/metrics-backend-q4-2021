@@ -28,10 +28,10 @@ export class Application {
       authDao
     });
 
-    this.routes = [];
+    this.handlers = [];
     // Controller initialisation
-    this.routes.push(serviceHandlers)
-    this.routes.push(authHandlers);
+    this.handlers.push(serviceHandlers)
+    this.handlers.push(authHandlers);
   }
 
   /**
@@ -67,8 +67,8 @@ export class Application {
       });
 
       registerJWTAuthStrategy(this.svc);
-      for (const route of this.routes) {
-        route.routes(this.svc);
+      for (const handler of this.handlers) {
+        handler.routes(this.svc);
       }
 
       await this.svc.start();
