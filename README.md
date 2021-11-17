@@ -72,3 +72,122 @@ Path: `/src/application.js`
 
 ## Routes
 
+---
+
+### Get service info
+| Method | Path | Authenticated |
+| :--- | :--- | :---: |
+| GET | /service | no |
+
+Returns basic service information
+
+##### Request
+N/A
+
+##### Response
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| service | string | The name of the service that is serving requests |
+| description | string | A description for this service |
+| version | string | The current deployed version of the service, in a SemVer format |
+
+---
+
+#### Get service health
+| Method | Path | Authenticated |
+| :--- | :--- | :---: |
+| GET | /service/health | no |
+
+Verifies the application is active and can serve requests
+
+##### Request
+N/A
+
+##### Response
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| ok | bool (true) | A true value to indicate the service is healthy |
+
+---
+
+#### Login
+| Method | Path | Authenticated |
+| :--- | :--- | :---: |
+| POST | /auth/login | no |
+
+Attempt to log into a user account using the credentials provided
+
+##### Request
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| email | string | The email address of the account to log into |
+| password | string | The password in plaintext to log in with |
+
+##### Response
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| access_token | string | A short-lived access token to be included in the 'Authorization' header for future requests |
+| refresh_token | string | An opaque token to be used when the access_token expires to generate a new access token |
+
+---
+
+#### Register
+| Method | Path | Authenticated |
+| :--- | :--- | :---: |
+| POST | /auth/register | no |
+
+Create a new account within the system
+
+##### Request
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| name | string | The name of the user to register |
+| email | string | The email address of the account to log into |
+| password | string | The password in plaintext to log in with |
+
+##### Response
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| access_token | string | A short-lived access token to be included in the 'Authorization' header for future requests |
+| refresh_token | string | An opaque token to be used when the access_token expires to generate a new access token |
+
+---
+
+#### Refresh
+| Method | Path | Authenticated |
+| :--- | :--- | :---: |
+| POST | /auth/refresh | no |
+
+Generate a new access token using the provided refresh token
+
+##### Request
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| token | string | The opaque refresh token previously provided for this user |
+
+##### Response
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| access_token | string | A short-lived access token to be included in the 'Authorization' header for future requests |
+
+---
+
+#### Context
+| Method | Path | Authenticated |
+| :--- | :--- | :---: |
+| GET | /auth/context | yes |
+
+Returns the context of the authenticated user
+
+##### Request
+N/A
+
+##### Response
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| account_id | string | The ID of the account of the authenticated user |
+| account_name | string | The full name of the authenticated user |
+| account_email | string | The email address of the authenticated user |
+| token_id | string | The ID of the refresh token used to generate the current access token |
+
+---
