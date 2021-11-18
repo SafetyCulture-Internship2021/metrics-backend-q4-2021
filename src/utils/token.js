@@ -71,26 +71,30 @@ export async function encodeRefreshToken(token) {
  */
 export async function decodeAccessToken(token) {
   return await new Promise((resolve, reject) => {
-    try {
-      const result = jwt.verify(token, config.get('jwt.signingKey'), {
-        audience: config.get('jwt.audience'),
-        subject: config.get('jwt.subject'),
-        issuer: config.get('jwt.issuer')
-      });
+    console.log(token);
+    jwt.verify(token, config.get('jwt.signingKey'), {
+      algorithms: ['HS512'],
+      audience: config.get('jwt.audience'),
+      subject: config.get('jwt.subject'),
+      issuer: config.get('jwt.issuer')
+    }, (err, result) => {
+      if (err) {
+        console.error("jwt error: ", err);
+        return reject(err);
+      }
 
       const {value, error, warning} = claimsSchema.validate(result, {
         stripUnknown: true
       });
 
       if (error) {
+        console.error("validation error: ", error);
         return reject(error);
       }
 
       return resolve(value);
-    } catch (err) {
-      return reject(err);
-    }
-  })
+    });
+  });
 }
 
 /**

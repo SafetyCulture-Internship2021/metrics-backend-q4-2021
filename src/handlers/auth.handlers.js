@@ -19,7 +19,7 @@ const refreshSchema = Joi.object().keys({
 });
 
 /**
- * Authentication controller implementing routes
+ * Authentication routes and handlers
  */
 export class AuthHandlers  {
   constructor({
@@ -34,12 +34,13 @@ export class AuthHandlers  {
     this.login = this.login.bind(this);
     this.register = this.register.bind(this);
     this.refresh = this.refresh.bind(this);
+    this.context = this.context.bind(this);
   }
 
   routes(svc) {
     svc.route({
       method: "POST",
-      path: "/login",
+      path: "/auth/login",
       handler: this.login,
       options: {
         auth: false,
@@ -51,7 +52,7 @@ export class AuthHandlers  {
 
     svc.route({
       method: "POST",
-      path: "/register",
+      path: "/auth/register",
       handler: this.register,
       options: {
         auth: false,
@@ -63,7 +64,7 @@ export class AuthHandlers  {
 
     svc.route({
       method: "POST",
-      path: "/refresh",
+      path: "/auth/refresh",
       handler: this.refresh,
       options: {
         auth: false,
@@ -72,6 +73,12 @@ export class AuthHandlers  {
         }
       }
     });
+
+    svc.route({
+      method: "GET",
+      path: "/auth/context",
+      handler: this.context,
+    })
   }
 
   /**
@@ -220,5 +227,16 @@ export class AuthHandlers  {
     return {
       access_token: await encodeAccessToken(generateClaims(account, accountToken)),
     }
+  }
+
+  /**
+   * Context will return a decoded version of the users current context
+   * @param req {Request} a hapi request object
+   * @param h {Object} a hapi response toolkit
+   * @return {Promise<Object>} response payload
+   */
+  async context(req, h) {
+    // Just return the decoded credentials to show what will be available
+    return req.auth.credentials;
   }
 }

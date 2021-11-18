@@ -1,16 +1,20 @@
 {
   "name": "metrics-backend",
+  "description": "",
+  "version": "0.0.1",
   "scripts": {
     "start": "NODE_ENV=production node ./dist/index.js",
     "start:dev": "NODE_ENV=development node ./dist/index.js",
     "dev": "npm run compile && npm run start:dev",
-    "watch": "./node_modules/nodemon/bin/nodemon.js --watch src -e ts --exec \"npm run dev\"",
+    "watch": "./node_modules/nodemon/bin/nodemon.js --watch src -e js --exec \"npm run dev\"",
     "compile": "./node_modules/typescript/bin/tsc",
     "test:all": "jest",
     "test:unit": "jest --group=unit",
     "test:integration": "jest --group=integration"
   },
-  "version": "0.0.1",
+  "engines": {
+    "node": ">=16 <17"
+  },
   "dependencies": {
     "@hapi/boom": "^9.1.4",
     "@hapi/glue": "^8.0.0",

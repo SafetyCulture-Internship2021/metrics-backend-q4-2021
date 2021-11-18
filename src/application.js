@@ -5,6 +5,7 @@ import {registerJWTAuthStrategy} from "./plugins";
 import {Database, initPool} from "./db";
 import {AuthDao} from "./dao";
 import {AuthHandlers} from "./handlers/auth.handlers";
+import { ServiceHandlers } from "./handlers/service.handlers";
 
 /**
  * Application initialises the API service and all of its dependencies
@@ -21,14 +22,16 @@ export class Application {
     // Service initialisation
     const authDao = new AuthDao(db);
 
+    const serviceHandlers = new ServiceHandlers({db});
     const authHandlers = new AuthHandlers({
       db,
       authDao
     });
 
-    this.routes = [];
+    this.handlers = [];
     // Controller initialisation
-    this.routes.push(authHandlers);
+    this.handlers.push(serviceHandlers)
+    this.handlers.push(authHandlers);
   }
 
   /**
@@ -64,8 +67,8 @@ export class Application {
       });
 
       registerJWTAuthStrategy(this.svc);
-      for (const route of this.routes) {
-        route.routes(this.svc);
+      for (const handler of this.handlers) {
+        handler.routes(this.svc);
       }
 
       await this.svc.start();

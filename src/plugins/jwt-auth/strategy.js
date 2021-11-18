@@ -1,5 +1,7 @@
 import Boom from "@hapi/boom";
 
+import { decodeAccessToken } from "../../utils";
+
 
 const SCHEME_NAME = 'jwt';
 
@@ -11,7 +13,11 @@ export function registerJWTAuthStrategy(svc) {
       if (!authorization) {
         return Boom.unauthorized(null, SCHEME_NAME);
       }
-      const claims = await decodeAccessToken(authorization);
+      const [, token] = authorization.split(/bearer/ig);
+      if (!token) {
+        return Boom.unauthorized("Token must be prefixed with 'Bearer'", SCHEME_NAME);
+      }
+      const claims = await decodeAccessToken(token.trim());
 
       return h.authenticated({ credentials: claims });
     }
