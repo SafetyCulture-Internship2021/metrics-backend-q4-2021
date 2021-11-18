@@ -18,7 +18,7 @@ export class AuthDao {
     this.fetchAccount = this.fetchAccount.bind(this);
     this.createAccountToken = this.createAccountToken.bind(this);
     this.fetchAccountToken = this.fetchAccountToken.bind(this);
-    this.deleteAccountToken = this.deleteAccountToken.bind(this):
+    this.deleteAccountToken = this.deleteAccountToken.bind(this);
   }
 
   /**
