@@ -17,9 +17,12 @@ export function registerJWTAuthStrategy(svc) {
       if (!token) {
         return Boom.unauthorized("Token must be prefixed with 'Bearer'", SCHEME_NAME);
       }
-      const claims = await decodeAccessToken(token.trim());
-
-      return h.authenticated({ credentials: claims });
+      try {
+        const claims = await decodeAccessToken(token.trim());
+        return h.authenticated({ credentials: claims });
+      } catch (err) {
+        return Boom.unauthorized("Invalid token provided")
+      }
     }
   }
   });

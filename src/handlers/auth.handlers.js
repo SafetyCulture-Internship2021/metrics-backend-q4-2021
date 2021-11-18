@@ -147,7 +147,7 @@ export class AuthHandlers  {
       // Swallow errors
     }
 
-    return h.code(204);
+    return h.response().code(204);
   }
 
   /**
@@ -211,7 +211,16 @@ export class AuthHandlers  {
     const logger = req.logger;
     const { token } = req.payload;
 
-    const decoded = await decodeRefreshToken(token);
+    if (!token) {
+      return Boom.unauthorized();
+    }
+
+    let decoded;
+    try {
+      decoded = await decodeRefreshToken(token);
+    } catch {
+      return Boom.unauthorized();
+    }
 
     const tx = await this.db.tx();
     let accountToken;

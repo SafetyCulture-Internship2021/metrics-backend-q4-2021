@@ -71,7 +71,6 @@ export async function encodeRefreshToken(token) {
  */
 export async function decodeAccessToken(token) {
   return await new Promise((resolve, reject) => {
-    console.log(token);
     jwt.verify(token, config.get('jwt.signingKey'), {
       algorithms: ['HS512'],
       audience: config.get('jwt.audience'),

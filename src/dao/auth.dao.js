@@ -73,7 +73,7 @@ export class AuthDao {
       return;
     }
 
-    const isValid = verifyPassword(password, rows[0].hash);
+    const isValid = await verifyPassword(password, rows[0].hash);
     if (!isValid) {
       return;
     }

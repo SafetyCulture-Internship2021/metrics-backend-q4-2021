@@ -48,6 +48,9 @@ export class Application {
               failAction: async (request, h, err) => {
                 throw err;
               }
+            },
+            cors: {
+              origin: ['http://localhost:3000']
             }
           }
         },
