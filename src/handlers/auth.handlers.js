@@ -32,6 +32,7 @@ export class AuthHandlers  {
     this.routes = this.routes.bind(this);
 
     this.login = this.login.bind(this);
+    this.logout = this.logout.bind(this);
     this.register = this.register.bind(this);
     this.refresh = this.refresh.bind(this);
     this.context = this.context.bind(this);
@@ -49,6 +50,12 @@ export class AuthHandlers  {
         }
       }
     });
+
+    svc.route({
+      method: "POST",
+      path: "/auth/logout",
+      handler: this.logout
+    })
 
     svc.route({
       method: "POST",
@@ -129,6 +136,18 @@ export class AuthHandlers  {
       refresh_token: await encodeRefreshToken(token),
       access_token: await encodeAccessToken(generateClaims(account, token))
     };
+  }
+
+  async logout(req, h) {
+    const { credentials } = req.auth;
+
+    try {
+      await this.authDao.deleteAccountToken(credentials.token_id);
+    } catch (err) {
+      // Swallow errors
+    }
+
+    return h.code(204);
   }
 
   /**
