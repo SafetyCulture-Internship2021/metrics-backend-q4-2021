@@ -131,6 +131,21 @@ Attempt to log into a user account using the credentials provided
 
 ---
 
+#### Logout
+| Method | Path | Authenticated |
+| :--- | :--- | :---: |
+| POST | /auth/logout | yes |
+
+Revokes the current refresh token, disallowing further use
+
+##### Request
+N/A
+
+##### Response
+N/A
+
+---
+
 #### Register
 | Method | Path | Authenticated |
 | :--- | :--- | :---: |

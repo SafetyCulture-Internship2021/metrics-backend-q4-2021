@@ -15,7 +15,7 @@ module.exports = {
   },
   jwt: {
     signingKey: 'defaultsigningkeydefaultsigningkey',
-    expiration: '1h',
+    expiration: '20m',
     audience: 'metrics-backend',
     subject: 'metrics-backend',
     issuer: 'metrics-backend'
