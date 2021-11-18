@@ -18,6 +18,7 @@ export class AuthDao {
     this.fetchAccount = this.fetchAccount.bind(this);
     this.createAccountToken = this.createAccountToken.bind(this);
     this.fetchAccountToken = this.fetchAccountToken.bind(this);
+    this.deleteAccountToken = this.deleteAccountToken.bind(this);
   }
 
   /**
@@ -72,7 +73,7 @@ export class AuthDao {
       return;
     }
 
-    const isValid = verifyPassword(password, rows[0].hash);
+    const isValid = await verifyPassword(password, rows[0].hash);
     if (!isValid) {
       return;
     }
@@ -137,5 +138,21 @@ export class AuthDao {
     `, [id]);
 
     return rows.length >= 1 ? rows[0] : undefined;
+  }
+
+  /**
+   * Deletes an account token by id
+   * @param id {string} UUID of the token
+   * @param opts {Object} options for this service function call
+   * @return {void} nothing
+   */
+  async deleteAccountToken(id, opts) {
+    const conn = ensureConn(this.database, opts);
+
+    await conn.query(`
+      DELETE
+      FROM account_tokens
+      WHERE id = $1
+    `, [id]);
   }
 }

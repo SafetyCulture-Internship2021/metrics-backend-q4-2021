@@ -32,6 +32,7 @@ export class AuthHandlers  {
     this.routes = this.routes.bind(this);
 
     this.login = this.login.bind(this);
+    this.logout = this.logout.bind(this);
     this.register = this.register.bind(this);
     this.refresh = this.refresh.bind(this);
     this.context = this.context.bind(this);
@@ -49,6 +50,12 @@ export class AuthHandlers  {
         }
       }
     });
+
+    svc.route({
+      method: "POST",
+      path: "/auth/logout",
+      handler: this.logout
+    })
 
     svc.route({
       method: "POST",
@@ -131,6 +138,18 @@ export class AuthHandlers  {
     };
   }
 
+  async logout(req, h) {
+    const { credentials } = req.auth;
+
+    try {
+      await this.authDao.deleteAccountToken(credentials.token_id);
+    } catch (err) {
+      // Swallow errors
+    }
+
+    return h.response().code(204);
+  }
+
   /**
    * Register creates a new account with the provided parameters
    * @param req {Request} a hapi request object
@@ -192,7 +211,16 @@ export class AuthHandlers  {
     const logger = req.logger;
     const { token } = req.payload;
 
-    const decoded = await decodeRefreshToken(token);
+    if (!token) {
+      return Boom.unauthorized();
+    }
+
+    let decoded;
+    try {
+      decoded = await decodeRefreshToken(token);
+    } catch {
+      return Boom.unauthorized();
+    }
 
     const tx = await this.db.tx();
     let accountToken;
