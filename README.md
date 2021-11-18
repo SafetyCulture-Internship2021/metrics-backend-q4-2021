@@ -10,6 +10,8 @@ Core backend service for the metrics application
 - Start the local docker resources `docker-compose up -d --build`
 - Start live-developing the application by running `npm run watch`
 
+*For **Windows** users you will also require [Docker Desktop](https://hub.docker.com/editions/community/docker-ce-desktop-windows)*
+
 ## Commands
 
 Each command can be run be executing `npm run {command}` in the console
