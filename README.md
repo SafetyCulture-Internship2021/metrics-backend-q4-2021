@@ -7,10 +7,9 @@ Core backend service for the metrics application
 - Install [nvm](https://github.com/nvm-sh/nvm)
 - Run `nvm install 16`
 - Run `npm install`
+- Install Docker Desktop for [Mac](https://hub.docker.com/editions/community/docker-ce-desktop-mac) or [Windows](https://hub.docker.com/editions/community/docker-ce-desktop-windows)
 - Start the local docker resources `docker-compose up -d --build`
 - Start live-developing the application by running `npm run watch`
-
-*For **Windows** users you will also require [Docker Desktop](https://hub.docker.com/editions/community/docker-ce-desktop-windows)*
 
 ## Commands
 
