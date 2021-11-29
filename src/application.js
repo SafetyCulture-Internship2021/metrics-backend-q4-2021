@@ -3,9 +3,11 @@ import {compose} from "@hapi/glue";
 
 import {registerJWTAuthStrategy} from "./plugins";
 import {Database, initPool} from "./db";
-import {AuthDao} from "./dao";
+import {AuthDao, MetricsDao} from "./dao";
 import {AuthHandlers} from "./handlers/auth.handlers";
 import { ServiceHandlers } from "./handlers/service.handlers";
+import { MetricHandlers} from "./handlers/metrics.handlers";
+
 
 /**
  * Application initialises the API service and all of its dependencies
@@ -21,17 +23,20 @@ export class Application {
 
     // Service initialisation
     const authDao = new AuthDao(db);
+    const metricsDao = new MetricsDao(db);
 
     const serviceHandlers = new ServiceHandlers({db});
     const authHandlers = new AuthHandlers({
       db,
       authDao
     });
+    const metricHandlers = new MetricHandlers({db, metricsDao});
 
     this.handlers = [];
     // Controller initialisation
     this.handlers.push(serviceHandlers)
     this.handlers.push(authHandlers);
+    this.handlers.push(metricHandlers);
   }
 
   /**
@@ -62,6 +67,9 @@ export class Application {
                 prettyPrint: process.env.NODE_ENV !== 'production',
                 redact: ['req.headers.authorization']
               }
+            },
+            {
+              plugin: require(('@hapi/h2o2'))
             }
           ]
         }

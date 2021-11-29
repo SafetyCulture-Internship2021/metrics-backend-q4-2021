@@ -4,12 +4,12 @@
   "version": "0.0.1",
   "scripts": {
     "start": "NODE_ENV=production node dist/index.js",
-    "start-windows": "SET NODE_ENV=production node dist/index.js",
     "start:dev": "NODE_ENV=development node dist/index.js",
-    "start-windows:dev": "SET NODE_ENV=development node dist/index.js",
     "dev": "npm run compile && npm run start:dev",
-    "dev-windows": "npm run compile && npm run start:dev",
     "watch": "./node_modules/nodemon/bin/nodemon.js --watch src -e js --exec \"npm run dev\"",
+    "start-windows": "cross-env NODE_ENV=production node dist/index.js",
+    "start-windows:dev": "cross-env NODE_ENV=development node dist/index.js",
+    "dev-windows": "npm run compile && npm run start-windows:dev",
     "watch-windows": "nodemon --watch src -e js --exec \"npm run dev-windows\"",
     "compile": "tsc",
     "test:all": "jest",
@@ -22,6 +22,7 @@
   "dependencies": {
     "@hapi/boom": "^9.1.4",
     "@hapi/glue": "^8.0.0",
+    "@hapi/h2o2": "^9.1.0",
     "@hapi/hapi": "^20.2.1",
     "bcrypt": "^5.0.1",
     "config": "^3.3.6",
@@ -30,6 +31,7 @@
     "jsonwebtoken": "^8.5.1",
     "pg": "^8.7.1",
     "pino": "^7.0.5",
+    "qs": "^6.10.1",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
@@ -47,6 +49,7 @@
     "@types/sinonjs__fake-timers": "^6.0.4",
     "@types/uuid": "^8.3.1",
     "babel-jest": "^27.3.1",
+    "cross-env": "^7.0.3",
     "jest": "^27.3.1",
     "jest-runner-groups": "^2.1.0",
     "nodemon": "^2.0.14",
