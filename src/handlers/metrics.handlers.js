@@ -39,9 +39,8 @@ export class MetricHandlers{
     })
   }
   async inputData(req, h){
-    let data;
     try{
-      req.data  =await this.metricsDao.dummyData();
+      req.data  =await this.metricsDao.databaseData();
     }catch (error){
       console.log(error);
       throw error;
