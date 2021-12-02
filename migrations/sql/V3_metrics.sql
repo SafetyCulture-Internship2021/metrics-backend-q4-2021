@@ -1,4 +1,4 @@
-CREATE TABLE data(
+CREATE TABLE metrics_data(
 pod_id varchar NOT NULL,
 service_type varchar NOT NULL,
 time_stamp int NOT NULL,
