@@ -62,8 +62,11 @@ export class Application {
                 prettyPrint: process.env.NODE_ENV !== 'production',
                 redact: ['req.headers.authorization']
               }
+            },
+            {
+              plugin: require(('@hapi/h2o2'))
             }
-          ]
+          ] 
         }
       }, {
         relativeTo: __dirname
