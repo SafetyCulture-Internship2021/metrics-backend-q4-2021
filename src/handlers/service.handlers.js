@@ -37,6 +37,7 @@ export class ServiceHandlers {
    * @return {Object} response payload
    */
   index(req, h) {
+    console.log("test")
     return {
       service: 'metrics-backend',
       description: 'core application for resolving metrics data',

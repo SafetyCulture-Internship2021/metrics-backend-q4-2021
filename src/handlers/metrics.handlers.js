@@ -1,18 +1,24 @@
 import qs from "qs";
 
-export class MetricHandlers{
+
+
+export class MetricHandlers {
   constructor({
-    db,
-    metricsDao
-  }) {
+                db,
+                metricsDao
+              }) {
     this.db = db;
     this.metricsDao = metricsDao;
 
     this.routes = this.routes.bind(this);
-    this.testData = this.testData.bind(this);
+    this.initialiseData = this.initialiseData.bind(this);
+    this.viewAllData = this.viewAllData.bind(this);
+
+
   }
-  routes(svc){
-    svc.route({
+
+  routes(svc) {
+    /*svc.route({
       method: "*",
       path: "/{p*}",
       handler: {
@@ -24,29 +30,42 @@ export class MetricHandlers{
           },
         }
       },
-      options:{
+      options: {
         auth: false
       }
-    });
+    });*/
     svc.route({
       method: "*",
       path: "/metrics/test",
-      handler: this.testData,
-      options:{
+      handler: this.initialiseData,
+      options: {
         auth: false
       }
-    })
-  }
-  async testData(res, h){
-    try{
-      const req  =await this.metricsDao.databaseData();
-      console.log(req)
-      return req;
+    });
 
-    }catch (error){
-      console.log(error);
-      throw error;
+
+  }
+
+  async initialiseData(req, h) {
+    try {
+      req = await this.metricsDao.initialiseData(0, 2592000)
+    } catch (err) {
+      console.log(err);
+      throw err;
     }
-
+    return req;
   }
+
+  async viewAllData(req, h) {
+
+    try {
+      req = await this.metricsDao.viewData();
+    } catch (err) {
+      console.log(err);
+      throw err;
+    }
+    return req;
+  }
+
 }
+

@@ -21,11 +21,11 @@ const refreshSchema = Joi.object().keys({
 /**
  * Authentication routes and handlers
  */
-export class AuthHandlers  {
+export class AuthHandlers {
   constructor({
-    db,
-    authDao
-  }) {
+                db,
+                authDao
+              }) {
     this.db = db;
     this.authDao = authDao;
 
@@ -96,7 +96,7 @@ export class AuthHandlers  {
    */
   async login(req, h) {
     const logger = req.logger;
-    const { email, password } = req.payload;
+    const {email, password} = req.payload;
 
     const tx = await this.db.tx()
 
@@ -139,7 +139,7 @@ export class AuthHandlers  {
   }
 
   async logout(req, h) {
-    const { credentials } = req.auth;
+    const {credentials} = req.auth;
 
     try {
       await this.authDao.deleteAccountToken(credentials.token_id);
@@ -158,7 +158,7 @@ export class AuthHandlers  {
    */
   async register(req, h) {
     const logger = req.logger;
-    const { email, password, name } = req.payload;
+    const {email, password, name} = req.payload;
 
     const tx = await this.db.tx();
 
@@ -209,7 +209,7 @@ export class AuthHandlers  {
    */
   async refresh(req, h) {
     const logger = req.logger;
-    const { token } = req.payload;
+    const {token} = req.payload;
 
     if (!token) {
       return Boom.unauthorized();
@@ -225,7 +225,7 @@ export class AuthHandlers  {
     const tx = await this.db.tx();
     let accountToken;
     try {
-      accountToken = await this.authDao.fetchAccountToken(decoded.id, { tx });
+      accountToken = await this.authDao.fetchAccountToken(decoded.id, {tx});
     } catch (err) {
       await tx.rollback();
       logger.error(`Failed to fetch token: ${err}`, err);

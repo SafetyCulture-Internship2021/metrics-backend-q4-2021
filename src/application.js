@@ -9,6 +9,7 @@ import { ServiceHandlers } from "./handlers/service.handlers";
 import { MetricHandlers} from "./handlers/metrics.handlers";
 
 
+
 /**
  * Application initialises the API service and all of its dependencies
  */
@@ -71,7 +72,7 @@ export class Application {
             {
               plugin: require(('@hapi/h2o2'))
             }
-          ] 
+          ]
         }
       }, {
         relativeTo: __dirname
