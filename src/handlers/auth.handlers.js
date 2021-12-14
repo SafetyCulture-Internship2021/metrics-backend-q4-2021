@@ -98,6 +98,7 @@ export class AuthHandlers {
     const logger = req.logger;
     const {email, password} = req.payload;
 
+
     const tx = await this.db.tx()
 
     let account;

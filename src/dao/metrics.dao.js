@@ -16,13 +16,13 @@ export class MetricsDao {
     this.viewData = this.viewData.bind(this);
 
   }
-
+//Gets the data from the data generator
   async getFromDataGen({service_type, ts_Start, ts_End}) {
     const path = `/metrics/${service_type}?from=${ts_Start}&to=${ts_End}`;
     const {data: response} = await axios.get(path);
     return response;
   }
-
+//inserts the data into the database
   async databaseData(rawData, opts) {
     const conn = ensureConn(this.database, opts);
     const results = [];
@@ -89,6 +89,7 @@ export class MetricsDao {
 
         }
         const array = [podId, podItem.meta.service, time_stamp, avg, percentile99, min, max, status_200, status_400, status_401, status_403, status_404, status_499, status_500, status_502]
+       //inserting the data into the table called metrics data
         const {rows} = await conn.query(`
     INSERT INTO metrics_data(
       pod_id,

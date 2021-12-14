@@ -42,8 +42,6 @@ export class MetricHandlers {
         auth: false
       }
     });
-
-
   }
 
   async initialiseData(req, h) {
